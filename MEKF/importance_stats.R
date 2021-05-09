@@ -84,6 +84,7 @@ compute_stats_with_prior = function(Xs, X_ks, ys, verbose=FALSE, dfmax=500) {
 }
 
 ## Computes empirical cross-prior statistics for transfer learning
+## The first environment is treated as the target environment
 ## Inputs: 
 ##    Xs: a list of matrix X from different environments
 ##    X_ks:  a list of knockoffs matrix X_k from different environments

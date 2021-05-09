@@ -1,0 +1,84 @@
+---
+title: "Multi-environment Knockoff Filter examples"
+output: html_notebook
+---
+
+We demonstrate the usage of the functions here. 
+
+```{r}
+source("MEKF/multienv.R")
+source("MEKF/accumulation_test.R")
+source("MEKF/importance_stats.R")
+```
+
+We start by generating a small dataset. 
+```{r}
+set.seed(1)
+n = 100 ## number of observations
+p = 50 ## number of variables
+k = 20 ## number of nonnulls
+num_env = 4 ## number of environments
+amplitude = 5
+rhos = rep(0,10)
+nonnulls = sample(1:p, k)
+beta = matrix(rep(0,num_env*p), nrow = p)
+for (i in 1:num_env){
+    beta[nonnulls, i] = 1
+}
+beta = beta* amplitude / sqrt(n)
+
+## generate X and Y from a linear model
+Xs = list()
+ys = list()
+for (i in 1:num_env){
+    X = matrix(rnorm(n*p),n)
+    Xs[[i]] = X
+    y = X %*% beta[,i] + rnorm(n)
+    ys[[i]] = y
+}
+```
+
+We construct knockoffs seperately for each environment 
+```{r}
+X_ks = list()
+for (i in 1:num_env){
+    X_ks[[i]] = create.gaussian(X, rep(0,p), toeplitz(rhos[i]^(0:(p-1))))
+}
+```
+
+### MEKF with meta-analysis statistics
+
+We compute knockoff statistics seperately for each environment
+```{r}
+W_matrix = NULL
+for (i in 1:num_env){
+    W = stat.lasso_coefdiff(Xs[[i]], X_ks[[i]], ys[[i]])
+    W_matrix = cbind(W_matrix,W)
+}
+```
+
+We run MEKF to test consistent conditional associations and partially consistent conditional associations.
+```{r}
+## Consistency testing
+invariant_model(W_matrix)
+## Parital consistency testing (Selective Seqstep+)
+partial_conjunction(W_matrix, r = 2)
+## Parital consistency testing (Accumulation test)
+partial_conjunction(W_matrix, r = 2, method = "accumulation")
+```
+
+### MEKF with cross-prior statistics
+We compute cross-prior statistics and test consistent conditional associations
+```{r}
+W_matrix = compute_stats_with_prior(Xs, X_ks, ys)
+invariant_model(W_matrix)
+```
+
+### Transfer learning with knockoffs
+We run multi-environment knockoff filter for transfer learning. Note that the first environment is treated as the target environment.
+```{r}
+W_trans = compute_transfer_stats_with_prior(Xs, X_ks, ys)
+thres_trans = knockoff.threshold(W_trans)
+which(W_trans >= thres_trans)
+```
+

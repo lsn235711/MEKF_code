@@ -29,22 +29,6 @@ sign_fun = function(vec){
     return((rbinom(l,1,0.5)*(vec == 0) + (vec > 0))*2 - 1)
 }
 
-## Report discoveries from transfer learning
-## Inputs: 
-##    Wj: a vector of importance statistics
-##    W0: a vector of importance statistics obtained from the target environment
-##    q: FDR threshold
-## Outputs:
-##    Variables selected by the transfer learning
-transfer_learning = function(Wj, W0, q = 0.1){
-    W_sign = sign_fun(Wj)
-    W_mag = abs(Wj)
-    W_eff = W_sign * W_mag
-    thres = knockoff.threshold(W_eff, fdr=q)
-    selected = which(W_eff >= thres)
-    return(selected)
-}
-
 ## Compute partial conjunction multi-environment p-values
 ## Inputs: 
 ##    vec: a vector of knockoff statistics
@@ -123,10 +107,9 @@ partial_conjunction = function(W_matrix, r, q = 0.1, method = "seqstep", c = 0.6
         selected = which(W_eff >= thres)
         return (selected)
     } else if(method == "accumulation"){
-        source('accumulation_test.R')
         hfun = create_HingeExp_function(C=2)
         pvals_sorted = pvals[order(-W_mag)]
-        num_selecteda = AccumulationTest(pvals_sorted , hfun)
+        num_selecteda = AccumulationTest(pvals_sorted , hfun, alpha=q)
         selecteda = NULL
         if (num_selecteda > 0){
             selecteda = order(-W_mag)[1:num_selecteda]
