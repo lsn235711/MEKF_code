@@ -9,7 +9,7 @@ library(adaptiveKnockoff)
 library(knockoff)
 library(gam)
 source("MEKF/importance_stats.R")
-source("MEKF/multienv.R")
+source("MEKF/functions_multienv.R")
 
 # Problem parameters
 num_env = 3 ##the first env is the target env

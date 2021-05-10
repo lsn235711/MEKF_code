@@ -5,8 +5,8 @@
 
 overlap = 10
 ##################################################
-source("MEKF/multienv.R")
-source("MEKF/accumulation_test.R")
+source("MEKF/functions_multienv.R")
+source("MEKF/accumulation_test_functions.R")
 
 ##------------------------
 ## Problem parameters

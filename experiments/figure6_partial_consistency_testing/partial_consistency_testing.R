@@ -12,8 +12,8 @@ model = 4
 ##################################################
 library(tidyverse)
 library(glmnet)
-source("MEKF/multienv.R")
-source("MEKF/accumulation_test.R")
+source("MEKF/functions_multienv.R")
+source("MEKF/accumulation_test_functions.R")
 source("MEKF/importance_stats.R")
 
 plot.design <- function(beta, title, filename) {
