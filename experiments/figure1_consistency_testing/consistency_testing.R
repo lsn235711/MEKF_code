@@ -1,7 +1,7 @@
-## Experiments in Figure 5
+## Experiments in Figure 1
 ## multi-environment knockoff filter: consistency testing
 ## FDR and Power vs amplitude
-## Figure 5 runs the following parallelly with 
+## Figure 1 runs the following parallelly with 
 ##              model in (1 4)
 ##              amplitude in (5 7.5 10 12.5 15 17.5 20 25 30 35 40)
 ##              main_seed in 1:100

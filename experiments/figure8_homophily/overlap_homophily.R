@@ -13,7 +13,7 @@ source("MEKF/accumulation_test_functions.R")
 ##------------------------
 p = 200
 num_env = 2
-ns = rep(400,num_env)
+ns = rep(600,num_env)
 k = 40
 k1 = 25
 k2 = 25
