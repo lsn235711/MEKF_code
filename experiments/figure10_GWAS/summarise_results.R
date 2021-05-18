@@ -2,23 +2,23 @@ library(tidyverse)
 library(gridExtra)
 library(kableExtra)
 
-ifile.list <- Sys.glob("results/discoveries_*.txt")
-results <- do.call("rbind", lapply(ifile.list, function(ifile) {
-    df <- read_delim(sprintf("%s", ifile), delim=" ", col_types=cols())
-}))
-
-ifile.list <- Sys.glob("results/num_discoveries_*.txt")
-num.results <- do.call("rbind", lapply(ifile.list, function(ifile) {
-    df <- read_delim(sprintf("%s", ifile), delim=" ", col_types=cols())
-}))
-
 if(FALSE) {
     ifile.list <- Sys.glob("results/discoveries_*.txt")
     results <- do.call("rbind", lapply(ifile.list, function(ifile) {
         df <- read_delim(sprintf("%s", ifile), delim=" ", col_types=cols())
     }))
+    ## Load partitions
+    ifile <- "partitions.txt"
+    Partitions <- read_delim(ifile, delim=" ") %>% mutate(Resolution = sprintf("res%d", Resolution))
+    Groups <- Partitions %>% group_by(Resolution, CHR, Group) %>% summarise(BP.min=min(BP), BP.max=max(BP)) %>% ungroup()
+    ## Cross-references discoveries with groups
+    results <- results %>% left_join(Groups, by = c("Resolution", "CHR", "Group"))
     res.file <- "discoveries.txt"
     results %>% write_delim(res.file, delim=" ")
+    ifile.list <- Sys.glob("results/num_discoveries_*.txt")
+    num.results <- do.call("rbind", lapply(ifile.list, function(ifile) {
+        df <- read_delim(sprintf("%s", ifile), delim=" ", col_types=cols())
+    }))
     res.file <- "num_discoveries.txt"
     num.results %>% write_delim(res.file, delim=" ")
 } else {
@@ -194,3 +194,27 @@ pp <- num.results %>%
           strip.text.x = element_text(size = 10), strip.text.y = element_text(size = 10), legend.title=element_text(size = 10))
    
 pp %>% ggsave(file=sprintf("%s/analysis_numdisc.pdf", out.dir.fig), width=9, height=3.5, units="in")
+
+
+##################
+## Chicago plot ##
+##################
+
+source("utils_chicagoplot.R")
+
+df.1 <- results %>%
+    filter((Discovered > 50) | (Method=="Stack")) %>%
+    mutate(r = ifelse(Method=="Stack", 1, r)) %>%
+    mutate(Randomness = ifelse(Method=="Stack", 2, Randomness)) %>%
+    filter(Phenotype=="platelet", Method %in% c("Accumulation", "Stack"), Randomness==2, q==0.1) %>%
+    select(-Phenotype, -q) %>%
+    mutate(Method="Knockoffs", FDP.local=0, Resolution=parse_number(Resolution))
+
+window.chr <- 3
+window.left <-55.5e6
+window.right <-59e6
+p.knockoffs.overlay <- plot_chicago(window.chr, window.left, window.right, df.1, upside=TRUE, plot.title="", overlay=TRUE)
+p.knockoffs.overlay %>% ggsave(file="platelet_chicago.pdf", width=7, height=2.25, units="in")
+
+p.knockoffs <- plot_chicago(window.chr, window.left, window.right, df.1, upside=TRUE, plot.title="", overlay=FALSE)
+p.knockoffs %>% ggsave(file="platelet_chicago_stack.pdf", width=6, height=5.5, units="in")
