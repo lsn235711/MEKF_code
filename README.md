@@ -1,5 +1,5 @@
 # Multi-environment Knockoff Filter
-This repository contains the code to reproduce the numerical results in our paper: **Multi-environment conditional independence testing with knockoffs**.
+This repository contains the code to reproduce the numerical results in our paper: **Searching for consistent associations with a multi-environment knockoff filter**.
 
 ## Folders
 * MEKF/: contains the main functions that implement the multi-environment knockoff filter for consistency testing, partial consistency testing and transfer learning.
