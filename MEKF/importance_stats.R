@@ -10,7 +10,7 @@ library(glmnet)
 ##    ys:  a list of vector y from different environments
 ## Outputs:
 ##    A matrix of empirical cross-prior statistics
-compute_stats_with_prior = function(Xs, X_ks, ys, verbose=FALSE, dfmax=500) {
+compute_stats_with_prior = function(Xs, X_ks, ys, family = "gaussian", verbose=FALSE, dfmax=500) {
     n = dim(Xs[[1]])[1]
     p = dim(Xs[[1]])[2]
     num_env = length(Xs)
@@ -37,7 +37,7 @@ compute_stats_with_prior = function(Xs, X_ks, ys, verbose=FALSE, dfmax=500) {
         ## Fit the lasso on all environments
         X_Xk_stack_mask = cbind(X_stack_mask, X_stack_k_mask)
         ##cv_fit = cv.glmnet(X_Xk_stack_mask[env_membership!=k,], y_stack[env_membership!=k], alpha=0)
-        cv_fit = cv.glmnet(X_Xk_stack_mask, y_stack, alpha=0)
+        cv_fit = cv.glmnet(X_Xk_stack_mask, y_stack, alpha=0, family = family)
         beta.hat.prior = coef(cv_fit, s="lambda.min")[-1]
         beta.hat.prior = abs(beta.hat.prior[1:p])+abs(beta.hat.prior[(p+1):(2*p)])
 
@@ -45,7 +45,7 @@ compute_stats_with_prior = function(Xs, X_ks, ys, verbose=FALSE, dfmax=500) {
         X_env = cbind(Xs[[k]], X_ks[[k]])
         eval_gamma = function(gamma) {
             penalty = 1*(1-gamma)  + gamma * 1 / (0.05+beta.hat.prior)
-            cv_fit = cv.glmnet(X_env, ys[[k]], penalty.factor=rep(penalty,2), dfmax=dfmax)
+            cv_fit = cv.glmnet(X_env, ys[[k]], penalty.factor=rep(penalty,2), dfmax=dfmax, family = family)
             idx.min = which.min(cv_fit$cvlo+cv_fit$cvup)
             err = c(cv_fit$cvlo[idx.min], cv_fit$cvup[idx.min])
             return(err)
@@ -73,7 +73,7 @@ compute_stats_with_prior = function(Xs, X_ks, ys, verbose=FALSE, dfmax=500) {
         
         ## Re-fit the lasso on environment k with optimally tuned prior
         penalty = 1*(1-gamma)  + gamma * 1 / (0.05+beta.hat.prior)
-        cv_fit = cv.glmnet(X_env, ys[[k]], penalty.factor=rep(penalty,2), dfmax=dfmax)
+        cv_fit = cv.glmnet(X_env, ys[[k]], penalty.factor=rep(penalty,2), dfmax=dfmax, family = family)
 
         ## Extract importance measures
         beta.hat = coef(cv_fit, s="lambda.min")[-1][1:(2*p)]
@@ -91,7 +91,7 @@ compute_stats_with_prior = function(Xs, X_ks, ys, verbose=FALSE, dfmax=500) {
 ##    ys:  a list of vector y from different environments
 ## Outputs:
 ##    A vector of empirical cross-prior statistics
-compute_transfer_stats_with_prior = function(Xs, X_ks, ys, verbose=FALSE, dfmax=500) {
+compute_transfer_stats_with_prior = function(Xs, X_ks, ys, family = "gaussian", verbose=FALSE, dfmax=500) {
     ## assume target environment is environment 1
     n = dim(Xs[[1]])[1]
     p = dim(Xs[[1]])[2]
@@ -111,7 +111,7 @@ compute_transfer_stats_with_prior = function(Xs, X_ks, ys, verbose=FALSE, dfmax=
     ## Fit the lasso on all other environments
     X_Xk_stack = cbind(X_stack, X_stack_k)
     ##cv_fit = cv.glmnet(X_Xk_stack_mask[env_membership!=k,], y_stack[env_membership!=k], alpha=0)
-    cv_fit = cv.glmnet(X_Xk_stack, y_stack, alpha=0)
+    cv_fit = cv.glmnet(X_Xk_stack, y_stack, alpha=0, family = family)
     beta.hat.prior = coef(cv_fit, s="lambda.min")[-1]
     beta.hat.prior = abs(beta.hat.prior[1:p])+abs(beta.hat.prior[(p+1):(2*p)])
     
@@ -119,7 +119,7 @@ compute_transfer_stats_with_prior = function(Xs, X_ks, ys, verbose=FALSE, dfmax=
     X_env = cbind(Xs[[1]], X_ks[[1]])
     eval_gamma = function(gamma) {
         penalty = 1*(1-gamma)  + gamma * 1 / (0.05+beta.hat.prior)
-        cv_fit = cv.glmnet(X_env, ys[[1]], penalty.factor=rep(penalty,2), dfmax=dfmax)
+        cv_fit = cv.glmnet(X_env, ys[[1]], penalty.factor=rep(penalty,2), dfmax=dfmax, family = family)
         idx.min = which.min(cv_fit$cvlo+cv_fit$cvup)
         err = c(cv_fit$cvlo[idx.min], cv_fit$cvup[idx.min])
         return(err)
@@ -147,7 +147,7 @@ compute_transfer_stats_with_prior = function(Xs, X_ks, ys, verbose=FALSE, dfmax=
     
     ## Re-fit the lasso on environment 1 with optimally tuned prior
     penalty = 1*(1-gamma)  + gamma * 1 / (0.05+beta.hat.prior)
-    cv_fit = cv.glmnet(X_env, ys[[1]], penalty.factor=rep(penalty,2), dfmax=dfmax)
+    cv_fit = cv.glmnet(X_env, ys[[1]], penalty.factor=rep(penalty,2), dfmax=dfmax, family = family)
     
     ## Extract importance measures
     beta.hat = coef(cv_fit, s="lambda.min")[-1][1:(2*p)]
